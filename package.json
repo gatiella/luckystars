@@ -1,0 +1,16 @@
+{
+  "name": "luckystars",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Free-to-play Telegram Mini App: Spin Wheel + Lucky Box, earn via ads/referrals/daily spins, flat $10 USDT withdrawal minimum",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "dev": "concurrently -n BACKEND,FRONTEND -c yellow,magenta \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "start": "npm run dev",
+    "migrate": "psql \"$DATABASE_URL\" -f backend/migrations/001_init.sql",
+    "build:frontend": "npm run build --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

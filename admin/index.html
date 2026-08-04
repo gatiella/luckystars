@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LuckyStars Admin</title>
+<style>
+  :root {
+    --purple-950:#0f0620; --purple-800:#241245; --purple-900:#180b30;
+    --gold-400:#ffd873; --gold-500:#f5c14b; --danger:#ff5c72; --success:#35e0a1;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, sans-serif; background: var(--purple-950); color:#fdf6ff; }
+  header { padding:18px 24px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,216,115,0.15); }
+  h1 { font-size:18px; background:linear-gradient(90deg,var(--gold-400),#ff3fa4); -webkit-background-clip:text; background-clip:text; color:transparent; margin:0; }
+  main { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .tabs button { background:rgba(255,255,255,0.06); border:1px solid rgba(255,216,115,0.2); color:#fdf6ff; padding:8px 16px; border-radius:999px; cursor:pointer; font-weight:600; }
+  .tabs button.active { background:linear-gradient(90deg,var(--gold-500),#d9a12e); color:#241245; }
+  table { width:100%; border-collapse: collapse; background: var(--purple-800); border-radius:12px; overflow:hidden; }
+  th, td { padding:10px 14px; text-align:left; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.06); }
+  th { color: var(--gold-400); }
+  button.action { padding:6px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; margin-right:6px; font-size:12px; }
+  .approve { background: var(--success); color:#08301f; }
+  .reject { background: var(--danger); color:#3a0510; }
+  .stat-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+  .stat { background:var(--purple-800); border-radius:12px; padding:16px; border:1px solid rgba(255,216,115,0.15); }
+  .stat .value { font-size:22px; font-weight:800; color:var(--gold-400); }
+  .stat .label { font-size:12px; opacity:0.7; }
+  input[type=text] { width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:#fdf6ff; margin-bottom:10px; }
+  form { background:var(--purple-800); padding:16px; border-radius:12px; margin-bottom:16px; }
+  .empty { opacity:0.6; padding: 20px; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>✨ LuckyStars — Admin</h1>
+  <button onclick="changeSecret()" style="background:none;border:1px solid rgba(255,216,115,0.3);color:#fdf6ff;padding:6px 12px;border-radius:8px;cursor:pointer;">🔑 Set Admin Key</button>
+</header>
+<main>
+  <div class="stat-grid" id="stats"></div>
+  <div class="tabs">
+    <button data-tab="withdrawals" class="active">Withdrawals</button>
+    <button data-tab="flagged">Flagged Referrals</button>
+    <button data-tab="tasks">Tasks</button>
+  </div>
+  <div id="content"></div>
+</main>
+
+<script>
+const API_BASE = "/api/admin";
+
+function getSecret() { return localStorage.getItem("ls_admin_secret") || ""; }
+function changeSecret() {
+  const s = prompt("Enter ADMIN_SECRET (from backend/.env):", getSecret());
+  if (s !== null) { localStorage.setItem("ls_admin_secret", s); loadAll(); }
+}
+
+async function req(path, options = {}) {
+  const res = await fetch(API_BASE + path, {
+    ...options,
+    headers: { "Content-Type": "application/json", "X-Admin-Secret": getSecret(), ...(options.headers||{}) },
+  });
+  if (res.status === 401) { alert("Unauthorized — check your admin key."); throw new Error("unauthorized"); }
+  return res.json();
+}
+
+async function loadStats() {
+  const s = await req("/stats");
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="value">${s.total_users}</div><div class="label">Total users</div></div>
+    <div class="stat"><div class="value">$${s.outstanding_usdt_liability.toFixed(2)}</div><div class="label">Outstanding USDT liability</div></div>
+    <div class="stat"><div class="value">$${s.pending_withdrawals_usdt.toFixed(2)}</div><div class="label">Pending withdrawals</div></div>
+    <div class="stat"><div class="value">${s.pending_withdrawals_count}</div><div class="label">Pending count</div></div>
+  `;
+}
+
+async function loadWithdrawals() {
+  const { withdrawals } = await req("/withdrawals?status=pending");
+  const content = document.getElementById("content");
+  if (!withdrawals.length) { content.innerHTML = '<div class="empty">No pending withdrawals.</div>'; return; }
+  content.innerHTML = `<table><thead><tr><th>User</th><th>Amount</th><th>Wallet</th><th>Requested</th><th></th></tr></thead><tbody>
+    ${withdrawals.map(w => `
+      <tr>
+        <td>${w.username || w.tg_id}</td>
+        <td>$${Number(w.amount_usdt).toFixed(2)}</td>
+        <td style="font-family:monospace;font-size:11px">${w.wallet}</td>
+        <td>${new Date(w.requested_at).toLocaleString()}</td>
+        <td>
+          <button class="action approve" onclick="approveWd(${w.id})">Approve</button>
+          <button class="action reject" onclick="rejectWd(${w.id})">Reject</button>
+        </td>
+      </tr>`).join("")}
+  </tbody></table>`;
+}
+async function approveWd(id) { await req(`/withdrawals/${id}/approve`, { method: "POST" }); loadWithdrawals(); loadStats(); }
+async function rejectWd(id) { await req(`/withdrawals/${id}/reject`, { method: "POST" }); loadWithdrawals(); loadStats(); }
+
+async function loadFlagged() {
+  const { flagged } = await req("/referrals/flagged");
+  const content = document.getElementById("content");
+  if (!flagged.length) { content.innerHTML = '<div class="empty">No flagged referrals.</div>'; return; }
+  content.innerHTML = `<table><thead><tr><th>Referrer</th><th>Referee</th><th>Reason</th><th>When</th><th></th></tr></thead><tbody>
+    ${flagged.map(f => `
+      <tr>
+        <td>${f.referrer_tg_id}</td>
+        <td>${f.referee_tg_id}</td>
+        <td>device/IP overlap or signup burst</td>
+        <td>${new Date(f.created_at).toLocaleString()}</td>
+        <td><button class="action approve" onclick="unflag(${f.id})">Clear flag</button></td>
+      </tr>`).join("")}
+  </tbody></table>`;
+}
+async function unflag(id) { await req(`/referrals/${id}/unflag`, { method: "POST" }); loadFlagged(); }
+
+async function loadTasks() {
+  const { tasks } = await req("/tasks");
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <form onsubmit="return addTask(event)">
+      <input type="text" id="t-title" placeholder="Task title" required>
+      <input type="text" id="t-url" placeholder="Target URL (channel/X link)">
+      <input type="text" id="t-spins" placeholder="Reward spins (default 1)">
+      <button class="action approve" type="submit">Add Task</button>
+    </form>
+    <table><thead><tr><th>Title</th><th>Reward</th><th>Status</th><th></th></tr></thead><tbody>
+    ${tasks.map(t => `
+      <tr>
+        <td>${t.title}</td>
+        <td>${t.reward_spins} spins</td>
+        <td>${t.active ? "Active" : "Disabled"}</td>
+        <td><button class="action ${t.active ? 'reject' : 'approve'}" onclick="toggleTask(${t.id})">${t.active ? "Disable" : "Enable"}</button></td>
+      </tr>`).join("")}
+    </tbody></table>`;
+}
+async function addTask(e) {
+  e.preventDefault();
+  const title = document.getElementById("t-title").value;
+  const target_url = document.getElementById("t-url").value;
+  const reward_spins = Number(document.getElementById("t-spins").value) || 1;
+  await req("/tasks", { method: "POST", body: JSON.stringify({ title, type: "custom", target_url, reward_spins }) });
+  loadTasks();
+  return false;
+}
+async function toggleTask(id) { await req(`/tasks/${id}/toggle`, { method: "POST" }); loadTasks(); }
+
+const loaders = { withdrawals: loadWithdrawals, flagged: loadFlagged, tasks: loadTasks };
+document.querySelectorAll(".tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    loaders[btn.dataset.tab]();
+  });
+});
+
+function loadAll() { loadStats().catch(()=>{}); loadWithdrawals().catch(()=>{}); }
+if (!getSecret()) changeSecret(); else loadAll();
+</script>
+</body>
+</html>
