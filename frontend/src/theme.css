@@ -80,45 +80,6 @@ body {
 .btn.disabled { opacity: 0.45; pointer-events: none; }
 
 .wheel-wrap { display: flex; justify-content: center; padding: 20px 0 30px; }
-.wheel {
-  width: 280px; height: 280px; border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    #ffd873 0deg 60deg,
-    #6b3fb8 60deg 120deg,
-    #ff3fa4 120deg 180deg,
-    #ffd873 180deg 240deg,
-    #6b3fb8 240deg 300deg,
-    #ff3fa4 300deg 360deg
-  );
-  border: 8px solid #ffd873;
-  box-shadow: 
-    0 0 40px rgba(255,216,115,0.6),
-    0 0 80px rgba(255,63,164,0.3),
-    0 20px 60px rgba(0,0,0,0.6),
-    inset 0 -20px 40px rgba(0,0,0,0.3),
-    inset 0 20px 40px rgba(255,255,255,0.1);
-  position: relative;
-  transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
-}
-.wheel::before {
-  content: "";
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 60px; height: 60px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff9e6, #ffd873);
-  box-shadow: 
-    0 0 30px rgba(255,216,115,0.8),
-    inset -2px -2px 8px rgba(0,0,0,0.3),
-    inset 2px 2px 8px rgba(255,255,255,0.4);
-  z-index: 3;
-}
-.wheel::after {
-  content: "";
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 70px; height: 70px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,216,115,0.2), transparent);
-  z-index: 2;
-}
 .wheel-pointer {
   position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
   width: 0; height: 0; 

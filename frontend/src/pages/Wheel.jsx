@@ -2,6 +2,98 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import { showRewardedAd } from "../lib/adsgram.js";
 
+const STANDARD_PRIZES = [
+  { key: "usdt_0.05", weight: 8, type: "usdt", value: 0.05, label: "$0.05" },
+  { key: "usdt_0.1", weight: 3, type: "usdt", value: 0.1, label: "$0.1" },
+  { key: "points_50", weight: 30, type: "points", value: 50, label: "50 pts" },
+  { key: "points_20", weight: 34, type: "points", value: 20, label: "20 pts" },
+  { key: "spin_1", weight: 15, type: "free_spin", value: 1, label: "+1 🎡" },
+  { key: "nothing", weight: 10, type: "nothing", value: 0, label: "❌" },
+];
+
+const PREMIUM_PRIZES = [
+  { key: "usdt_0.5", weight: 10, type: "usdt", value: 0.5, label: "$0.5" },
+  { key: "usdt_1", weight: 5, type: "usdt", value: 1, label: "$1" },
+  { key: "usdt_0.2", weight: 20, type: "usdt", value: 0.2, label: "$0.2" },
+  { key: "points_200", weight: 25, type: "points", value: 200, label: "200 pts" },
+  { key: "spin_1", weight: 25, type: "free_spin", value: 1, label: "+1 🎡" },
+  { key: "nothing", weight: 15, type: "nothing", value: 0, label: "❌" },
+];
+
+function WheelSVG({ prizes, isSpinning }) {
+  const totalWeight = prizes.reduce((sum, p) => sum + p.weight, 0);
+  const segments = [];
+  let cumulativeDeg = 0;
+
+  prizes.forEach((prize) => {
+    const segmentDeg = (prize.weight / totalWeight) * 360;
+    const midDeg = cumulativeDeg + segmentDeg / 2;
+    segments.push({
+      ...prize,
+      startDeg: cumulativeDeg,
+      endDeg: cumulativeDeg + segmentDeg,
+      midDeg,
+    });
+    cumulativeDeg += segmentDeg;
+  });
+
+  const colors = ["#ffd873", "#6b3fb8", "#ff3fa4", "#00d9a3", "#f5a623", "#8b5cf6"];
+
+  return (
+    <svg width="280" height="280" viewBox="0 0 280 280" style={{ filter: "drop-shadow(0 0 20px rgba(255,216,115,0.2))", transform: isSpinning ? "rotate(0deg)" : "rotate(0deg)" }}>
+      {segments.map((seg, i) => {
+        const color = colors[i % colors.length];
+        const startRad = (seg.startDeg * Math.PI) / 180;
+        const endRad = (seg.endDeg * Math.PI) / 180;
+        const r = 120;
+        const x1 = 140 + r * Math.cos(startRad);
+        const y1 = 140 + r * Math.sin(startRad);
+        const x2 = 140 + r * Math.cos(endRad);
+        const y2 = 140 + r * Math.sin(endRad);
+        const largeArc = seg.endDeg - seg.startDeg > 180 ? 1 : 0;
+        const pathData = `M 140 140 L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+        const labelRad = (seg.midDeg * Math.PI) / 180;
+        const labelR = 85;
+        const labelX = 140 + labelR * Math.cos(labelRad);
+        const labelY = 140 + labelR * Math.sin(labelRad);
+
+        return (
+          <g key={seg.key}>
+            <path d={pathData} fill={color} stroke="#ffd873" strokeWidth="2" />
+            <text
+              x={labelX}
+              y={labelY}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="#0f0620"
+              fontSize="12"
+              fontWeight="700"
+              transform={`rotate(${seg.midDeg + 90} ${labelX} ${labelY})`}
+            >
+              {seg.label}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Center gem */}
+      <circle cx="140" cy="140" r="32" fill="url(#gemGradient)" stroke="#ffd873" strokeWidth="2" />
+      <text x="140" y="145" textAnchor="middle" fill="#0f0620" fontSize="20" fontWeight="700">
+        TAP
+      </text>
+
+      {/* Gradients */}
+      <defs>
+        <radialGradient id="gemGradient" cx="35%" cy="35%">
+          <stop offset="0%" stopColor="#fff9e6" />
+          <stop offset="100%" stopColor="#ffd873" />
+        </radialGradient>
+      </defs>
+    </svg>
+  );
+}
+
 export default function Wheel({ user, onChange }) {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
@@ -71,9 +163,9 @@ export default function Wheel({ user, onChange }) {
       <div className="card">
         <div className="section-title">✨ Spin the Wheel</div>
         <div className="wheel-wrap">
-          <div style={{ position: "relative", filter: "drop-shadow(0 0 20px rgba(255,216,115,0.2))" }}>
+          <div style={{ position: "relative", transform: `rotate(0deg)`, transition: "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)" }} ref={wheelRef}>
             <div className="wheel-pointer" />
-            <div className="wheel" ref={wheelRef} />
+            <WheelSVG prizes={STANDARD_PRIZES} isSpinning={spinning} />
           </div>
         </div>
         <p className="muted" style={{ textAlign: "center", marginBottom: 16 }}>Free spins available: <span style={{ color: "#ffd873", fontWeight: 600 }}>{user?.free_spins ?? 0}</span></p>
