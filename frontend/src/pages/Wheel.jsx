@@ -69,21 +69,21 @@ export default function Wheel({ user, onChange }) {
   return (
     <>
       <div className="card">
-        <div className="section-title">Spin the Wheel</div>
+        <div className="section-title">✨ Spin the Wheel</div>
         <div className="wheel-wrap">
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative", filter: "drop-shadow(0 0 20px rgba(255,216,115,0.2))" }}>
             <div className="wheel-pointer" />
             <div className="wheel" ref={wheelRef} />
           </div>
         </div>
-        <p className="muted" style={{ textAlign: "center" }}>Free spins available: {user?.free_spins ?? 0}</p>
+        <p className="muted" style={{ textAlign: "center", marginBottom: 16 }}>Free spins available: <span style={{ color: "#ffd873", fontWeight: 600 }}>{user?.free_spins ?? 0}</span></p>
         <button
           className={"btn" + (spinning || !user?.free_spins ? " disabled" : "")}
           onClick={() => doSpin("standard")}
+          style={{ marginBottom: 10 }}
         >
-          {spinning ? "Spinning…" : "Spin Free"}
+          {spinning ? "🔄 Spinning…" : "🎡 Spin Free"}
         </button>
-        <div style={{ height: 10 }} />
         <button
           className={"btn secondary" + (spinning || (user?.stars_balance ?? 0) < 50 ? " disabled" : "")}
           onClick={() => doSpin("premium")}
@@ -92,13 +92,22 @@ export default function Wheel({ user, onChange }) {
         </button>
 
         {result && !result.error && (
-          <p style={{ textAlign: "center", marginTop: 14, fontWeight: 700 }}>
-            {result.prize.type === "nothing" ? "No luck this time — try again!" : `🎉 You won: ${result.prize.type === "usdt" ? `$${result.prize.value} USDT` : result.prize.type === "free_spin" ? `${result.prize.value} free spin` : `${result.prize.value} points`}`}
-            <br />
-            <span className="muted" style={{ fontWeight: 400 }}>
-              Seed: {result.server_seed.slice(0, 10)}… · Hash: {result.result_hash.slice(0, 10)}…
+          <div style={{ 
+            textAlign: "center", 
+            marginTop: 18, 
+            padding: 14,
+            background: "linear-gradient(135deg, rgba(255,216,115,0.1), rgba(255,63,164,0.1))",
+            borderRadius: "14px",
+            border: "1px solid rgba(255,216,115,0.3)",
+            animation: "pulse 2s ease-in-out"
+          }}>
+            <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>
+              {result.prize.type === "nothing" ? "❌ No luck this time" : `🎉 ${result.prize.type === "usdt" ? `$${result.prize.value} USDT` : result.prize.type === "free_spin" ? `+${result.prize.value} Free Spin` : `+${result.prize.value} Points`}`}
+            </p>
+            <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>
+              Hash: {result.result_hash.slice(0, 8)}… | Seed: {result.server_seed.slice(0, 8)}…
             </span>
-          </p>
+          </div>
         )}
       </div>
 
