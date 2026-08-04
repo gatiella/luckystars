@@ -6,7 +6,8 @@
   "scripts": {
     "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
     "dev": "concurrently -n BACKEND,FRONTEND -c yellow,magenta \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-    "start": "npm run dev",
+    "prestart": "npm install --prefix backend",
+    "start": "npm run start --prefix backend",
     "migrate": "psql \"$DATABASE_URL\" -f backend/migrations/001_init.sql",
     "prebuild": "npm install --prefix frontend",
     "build": "npm run build:frontend",
