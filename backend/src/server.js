@@ -61,6 +61,10 @@ app.get("/health", (req, res) => res.json({ ok: true }));
 // Admin panel (static HTML). API calls it makes are gated by ADMIN_SECRET — see adminAuth.
 app.use("/admin", express.static(path.join(__dirname, "../../admin")));
 
+// Serve the built frontend at the root URL for single-service Render deployments.
+const frontendDistPath = path.join(__dirname, "../../frontend/dist");
+app.use(express.static(frontendDistPath));
+
 app.get("/api/me", telegramAuth, (req, res) => {
   res.json({ user: req.user });
 });
@@ -71,6 +75,13 @@ app.use("/api/referral", telegramAuth, referralRoutes);
 app.use("/api/earn", telegramAuth, earnRoutes);
 app.use("/api/withdraw", telegramAuth, withdrawLimiter, withdrawRoutes);
 app.use("/api/admin", adminAuth, adminRoutes);
+
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ error: "not_found" });
+  }
+  res.sendFile(path.join(frontendDistPath, "index.html"));
+});
 
 // basic error handler — never leak internals to the client
 app.use((err, req, res, next) => {
