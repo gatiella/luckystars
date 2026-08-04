@@ -25,8 +25,8 @@ app.set("trust proxy", 1); // needed for correct req.ip behind Render/Railway pr
 // contentSecurityPolicy disabled because the plain-HTML admin panel below uses inline
 // script/style; the panel itself is protected by ADMIN_SECRET on every API call it makes.
 // For a client this sensitive, also put /admin behind an IP allowlist or VPN at the proxy layer.
-// frameguard is set to ALLOWALL to allow Telegram Mini App iframe embedding.
-app.use(helmet({ contentSecurityPolicy: false, frameguard: { action: "ALLOWALL" } }));
+// frameguard is disabled to allow Telegram Mini App iframe embedding.
+app.use(helmet({ contentSecurityPolicy: false, frameguard: false }));
 app.use(
   cors({
     origin: process.env.ALLOWED_ORIGIN ? process.env.ALLOWED_ORIGIN.split(",") : "*",
