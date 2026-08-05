@@ -214,6 +214,43 @@ body {
   background: rgba(53,224,161,0.15); color: var(--success);
 }
 .badge.pending { background: rgba(245,193,75,0.15); color: var(--gold-400); }
+.badge.danger { background: rgba(255,92,114,0.15); color: var(--danger); }
+
+/* ---- Withdraw tab ---- */
+.withdraw-balance {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 16px;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(53,224,161,0.12), transparent 60%),
+    rgba(255,255,255,0.05);
+  border: 1px solid rgba(53,224,161,0.3);
+  border-radius: var(--radius-md);
+}
+.withdraw-amount {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700; font-size: 28px; color: var(--success);
+}
+.progress-track {
+  height: 8px; border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold-500), var(--success));
+  transition: width 0.6s ease;
+}
+.amount-row { display: flex; gap: 8px; align-items: stretch; margin-bottom: 12px; }
+.amount-row input { flex: 1; }
+.chip-btn {
+  flex-shrink: 0; padding: 0 16px; border-radius: var(--radius-md);
+  border: 1px solid rgba(255,216,115,0.35);
+  background: rgba(255,216,115,0.1); color: var(--gold-400);
+  font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px;
+  cursor: pointer;
+}
+.chip-btn:active { transform: scale(0.95); }
+.field-error { color: var(--danger); font-size: 12px; margin: -6px 0 10px; }
 
 /* ---- Ranks tab ---- */
 .contest-banner {

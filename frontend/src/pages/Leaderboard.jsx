@@ -74,7 +74,7 @@ export default function Leaderboard({ user }) {
   }, []);
 
   function shareInvite() {
-    const bot = import.meta.env.VITE_BOT_USERNAME || "your_bot";
+    const bot = import.meta.env.VITE_BOT_USERNAME || "LuckystarsApp_bot";
     const link = `https://t.me/share/url?url=${encodeURIComponent(
       `https://t.me/${bot}?start=${user?.tg_id}`
     )}&text=${encodeURIComponent("Spin, open Lucky Boxes, and cash out real USDT — join me on LuckyStars! 🎰")}`;
