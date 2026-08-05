@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api.js";
-import { showRewardedAd } from "../lib/adsgram.js";
 
 // Wheel segments mirror the server prize tables in backend/src/routes/spin.js.
 // Display order is cosmetic (outcomes are matched by key), arranged to mix prize types.
@@ -134,14 +134,9 @@ function WheelSVG({ prizes }) {
 export default function Wheel({ user, onChange }) {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
-  const [tasks, setTasks] = useState([]);
   const [displayTier, setDisplayTier] = useState("standard");
   const wheelRef = useRef(null);
   const rotationRef = useRef(0);
-
-  useEffect(() => {
-    api.tasks().then((r) => setTasks(r.tasks)).catch(() => {});
-  }, []);
 
   async function doSpin(tier, cost) {
     if (spinning) return;
@@ -178,31 +173,6 @@ export default function Wheel({ user, onChange }) {
     } catch (err) {
       setSpinning(false);
       setResult({ error: err.data?.error || "spin_failed" });
-    }
-  }
-
-  async function claimDaily() {
-    try {
-      await api.dailySpin();
-      await onChange();
-    } catch (err) {
-      alert(err.data?.error === "already_claimed" ? "Come back tomorrow for your next free spin!" : "Something went wrong");
-    }
-  }
-
-  async function watchAd() {
-    try {
-      await showRewardedAd(); // only resolves if the ad was watched to completion
-      await api.adReward();
-      await onChange();
-    } catch (err) {
-      if (err?.data?.error === "daily_ad_cap_reached") {
-        alert("You've hit today's ad-reward limit — come back tomorrow!");
-      } else if (err?.message === "adsgram_block_id_missing" || err?.message === "adsgram_sdk_not_loaded") {
-        alert("Ad network isn't configured yet — set VITE_ADSGRAM_BLOCK_ID.");
-      } else {
-        // ad skipped/closed early or failed to load — no reward, no error dialog needed
-      }
     }
   }
 
@@ -289,47 +259,12 @@ export default function Wheel({ user, onChange }) {
             <p style={{ fontWeight: 700, margin: 0 }}>⚠️ {result.error}</p>
           </div>
         )}
+        {!spinning && !user?.free_spins && (
+          <p className="muted" style={{ textAlign: "center", marginTop: 12, marginBottom: 0 }}>
+            Out of free spins? <Link to="/earn" style={{ color: "var(--gold-400)", fontWeight: 700 }}>Earn more on the Tasks tab →</Link>
+          </p>
+        )}
       </div>
-
-      <div className="card">
-        <div className="section-title">Earn More Spins</div>
-        <button className="btn secondary" onClick={claimDaily} style={{ marginBottom: 10 }}>
-          📅 Claim Daily Free Spin
-        </button>
-        <button className="btn secondary" onClick={watchAd}>
-          ▶️ Watch Ad for a Free Spin
-        </button>
-      </div>
-
-      {tasks.length > 0 && (
-        <div className="card">
-          <div className="section-title">Tasks</div>
-          {tasks.map((t) => (
-            <div className="list-row" key={t.id}>
-              <div>
-                <div>{t.title}</div>
-                <div className="muted">+{t.reward_spins} spin{t.reward_spins > 1 ? "s" : ""}</div>
-              </div>
-              {t.completed ? (
-                <span className="badge">Done</span>
-              ) : (
-                <button
-                  className="btn secondary"
-                  style={{ width: "auto", padding: "8px 16px" }}
-                  onClick={async () => {
-                    if (t.target_url) window.open(t.target_url, "_blank");
-                    await api.completeTask(t.id);
-                    await onChange();
-                    api.tasks().then((r) => setTasks(r.tasks));
-                  }}
-                >
-                  Go
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
     </>
   );
 }

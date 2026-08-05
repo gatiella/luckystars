@@ -1,7 +1,8 @@
--- Optional seed data — edit the URLs/titles for your client, then:
+-- Optional seed data — add real tasks here when the social channels exist, then:
 -- psql "$DATABASE_URL" -f 002_seed_tasks.sql
-
-INSERT INTO tasks (title, type, target_url, reward_spins) VALUES
-  ('Join our Telegram channel', 'join_channel', 'https://t.me/your_channel', 2),
-  ('Follow us on X', 'follow_x', 'https://x.com/your_handle', 1)
-ON CONFLICT DO NOTHING;
+--
+-- Example:
+-- INSERT INTO tasks (title, type, target_url, reward_spins) VALUES
+--   ('Join our Telegram channel', 'join_channel', 'https://t.me/<real_channel>', 2),
+--   ('Follow us on X', 'follow_x', 'https://x.com/<real_handle>', 1)
+-- ON CONFLICT DO NOTHING;

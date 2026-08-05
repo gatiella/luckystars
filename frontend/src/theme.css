@@ -252,6 +252,38 @@ body {
 .chip-btn:active { transform: scale(0.95); }
 .field-error { color: var(--danger); font-size: 12px; margin: -6px 0 10px; }
 
+/* ---- Tasks (Earn) tab ---- */
+.earn-hero {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255,216,115,0.15), transparent 55%),
+    linear-gradient(160deg, var(--purple-700), var(--purple-900));
+  border-color: rgba(255,216,115,0.3);
+}
+.earn-tile {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.earn-tile:last-of-type { border-bottom: none; }
+.earn-icon {
+  --accent: var(--gold-400);
+  width: 44px; height: 44px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.earn-info { flex: 1; min-width: 0; }
+.earn-title { font-weight: 700; font-size: 14px; }
+.earn-action { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.reward-chip {
+  font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+  background: rgba(255,216,115,0.12); color: var(--gold-400);
+  border: 1px solid rgba(255,216,115,0.3);
+  white-space: nowrap;
+}
+.earn-btn { width: auto; padding: 9px 18px; font-size: 13px; }
+
 /* ---- Ranks tab ---- */
 .contest-banner {
   position: relative; overflow: hidden;
