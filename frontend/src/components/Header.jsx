@@ -1,20 +1,34 @@
+import { Link } from "react-router-dom";
+
 export default function Header({ user }) {
   return (
     <div className="header">
-      <div className="logo">✨ LuckyStars</div>
-      <div className="balance-pill">
-        <span className="usdt">${Number(user?.usdt_balance || 0).toFixed(2)}</span>
-        <span>
-          ⭐ {user?.stars_balance ?? 0}
-          <button
-            className="btn"
-            style={{ marginLeft: 8, padding: "4px 8px", fontSize: 12 }}
-            onClick={() => (window.location = "/topup")}
-          >
-            Top up
-          </button>
-        </span>
-        <span>🔷 {user?.points_balance ?? 0}</span>
+      <div className="header-top">
+        <div className="logo">✨ LuckyStars</div>
+        <Link to="/topup" className="topup-btn">＋ Top up</Link>
+      </div>
+      <div className="balance-bar">
+        <div className="balance-chip">
+          <span className="chip-icon">💵</span>
+          <div>
+            <div className="chip-value usdt">${Number(user?.usdt_balance || 0).toFixed(2)}</div>
+            <div className="chip-label">USDT</div>
+          </div>
+        </div>
+        <div className="balance-chip">
+          <span className="chip-icon">⭐</span>
+          <div>
+            <div className="chip-value">{user?.stars_balance ?? 0}</div>
+            <div className="chip-label">Stars</div>
+          </div>
+        </div>
+        <div className="balance-chip">
+          <span className="chip-icon">🔷</span>
+          <div>
+            <div className="chip-value">{user?.points_balance ?? 0}</div>
+            <div className="chip-label">Points</div>
+          </div>
+        </div>
       </div>
     </div>
   );

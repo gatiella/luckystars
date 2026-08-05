@@ -13,26 +13,33 @@ const router = Router();
 
 const ROUND_TTL_MS = 2 * 60 * 1000; // pending round expires after 2 minutes if unclaimed
 
-// Standard (free) wheel — modest prizes, funded by ad revenue
+// Standard (free) wheel — modest prizes, funded by ad revenue.
+// NOTE: the wheel UI in frontend/src/pages/Wheel.jsx mirrors these keys — keep them in sync.
 const STANDARD_TABLE = [
   { key: "usdt_0.05", weight: 8, type: "usdt", value: 0.05 },
   { key: "usdt_0.1", weight: 3, type: "usdt", value: 0.1 },
-  { key: "points_50", weight: 30, type: "points", value: 50 },
-  { key: "points_20", weight: 34, type: "points", value: 20 },
+  { key: "usdt_0.25", weight: 1, type: "usdt", value: 0.25 },
+  { key: "points_20", weight: 32, type: "points", value: 20 },
+  { key: "points_50", weight: 26, type: "points", value: 50 },
+  { key: "points_100", weight: 7, type: "points", value: 100 },
   { key: "stars_1", weight: 10, type: "stars", value: 1 },
+  { key: "stars_3", weight: 4, type: "stars", value: 3 },
   { key: "spin_1", weight: 15, type: "free_spin", value: 1 },
   { key: "nothing", weight: 10, type: "nothing", value: 0 },
 ];
 
 // Premium wheel — unlocked with Telegram Stars, better odds/prizes
 const PREMIUM_TABLE = [
+  { key: "usdt_0.2", weight: 20, type: "usdt", value: 0.2 },
   { key: "usdt_0.5", weight: 10, type: "usdt", value: 0.5 },
   { key: "usdt_1", weight: 5, type: "usdt", value: 1 },
-  { key: "usdt_0.2", weight: 20, type: "usdt", value: 0.2 },
-  { key: "points_200", weight: 25, type: "points", value: 200 },
+  { key: "usdt_2", weight: 2, type: "usdt", value: 2 },
+  { key: "points_200", weight: 22, type: "points", value: 200 },
+  { key: "points_500", weight: 6, type: "points", value: 500 },
   { key: "stars_5", weight: 10, type: "stars", value: 5 },
-  { key: "spin_1", weight: 25, type: "free_spin", value: 1 },
-  { key: "nothing", weight: 15, type: "nothing", value: 0 },
+  { key: "stars_10", weight: 4, type: "stars", value: 10 },
+  { key: "spin_1", weight: 20, type: "free_spin", value: 1 },
+  { key: "nothing", weight: 13, type: "nothing", value: 0 },
 ];
 
 /**

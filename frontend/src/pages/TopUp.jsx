@@ -2,17 +2,23 @@ import { useState } from "react";
 import { api } from "../api.js";
 
 const PACKAGES = [
+  { stars: 10, label: "10 Stars" },
+  { stars: 25, label: "25 Stars" },
   { stars: 50, label: "50 Stars" },
+  { stars: 100, label: "100 Stars" },
   { stars: 150, label: "150 Stars" },
+  { stars: 250, label: "250 Stars" },
   { stars: 500, label: "500 Stars" },
+  { stars: 1000, label: "1000 Stars" },
 ];
 
 export default function TopUp({ user, onChange }) {
-  const [loading, setLoading] = useState(false);
+  // Holds the star amount of the package being purchased, or null when idle
+  const [loading, setLoading] = useState(null);
   const [message, setMessage] = useState(null);
 
   async function buy(stars) {
-    setLoading(true);
+    setLoading(stars);
     setMessage(null);
     try {
       // Prefer a real Telegram Stars (XTR) invoice when available
@@ -30,7 +36,7 @@ export default function TopUp({ user, onChange }) {
           } else {
             setMessage(`Payment ${status}.`);
           }
-          setLoading(false);
+          setLoading(null);
         });
         return; // loading is cleared in the openInvoice callback
       }
@@ -39,10 +45,10 @@ export default function TopUp({ user, onChange }) {
       const dev = await api.starsTopUp(stars).catch((e) => { throw e; });
       setMessage(`Top-up complete. New balance: ${dev.stars_balance}`);
       if (onChange) await onChange();
-      setLoading(false);
+      setLoading(null);
     } catch (err) {
       setMessage(err.data?.error || err.message || "Top-up failed");
-      setLoading(false);
+      setLoading(null);
     }
   }
 
@@ -57,8 +63,8 @@ export default function TopUp({ user, onChange }) {
             <div style={{ fontWeight: 700 }}>{p.label}</div>
             <div className="muted">Pay {p.stars} ⭐ via Telegram Stars</div>
           </div>
-          <button className="btn" onClick={() => buy(p.stars)} disabled={loading}>
-            {loading ? "Processing…" : `Buy ${p.label}`}
+          <button className="btn" onClick={() => buy(p.stars)} disabled={loading !== null}>
+            {loading === p.stars ? "Processing…" : `Buy ${p.label}`}
           </button>
         </div>
       ))}
