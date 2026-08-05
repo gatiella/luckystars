@@ -14,6 +14,7 @@ import spinRoutes from "./routes/spin.js";
 import boxRoutes from "./routes/box.js";
 import referralRoutes from "./routes/referral.js";
 import earnRoutes from "./routes/earn.js";
+import adWebhookRoutes from "./routes/adWebhook.js";
 import withdrawRoutes from "./routes/withdraw.js";
 import adminRoutes from "./routes/admin.js";
 import starsRoutes from "./routes/stars.js";
@@ -75,6 +76,10 @@ app.get("/api/me", telegramAuth, (req, res) => {
 app.use("/api/spin", telegramAuth, gameLimiter, spinRoutes);
 app.use("/api/box", telegramAuth, gameLimiter, boxRoutes);
 app.use("/api/referral", telegramAuth, referralRoutes);
+// Adsgram S2S reward postback — no telegramAuth (Adsgram's servers have no
+// Mini App initData); guarded by ADSGRAM_POSTBACK_SECRET instead. Must be
+// mounted before the authed /api/earn routes so its path matches first.
+app.use("/api/earn", adWebhookRoutes);
 app.use("/api/earn", telegramAuth, earnRoutes);
 app.use("/api/stars", telegramAuth, starsRoutes);
 app.use("/api/stats", telegramAuth, statsRoutes);
