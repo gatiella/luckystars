@@ -83,6 +83,36 @@ router.get("/tasks", asyncHandler(async (req, res) => {
   res.json({ tasks: rows });
 }));
 
+// Purchases listing for admins
+router.get("/purchases", asyncHandler(async (req, res) => {
+  const { rows } = await query(
+    `SELECT p.*, u.tg_id, u.username FROM purchases p JOIN users u ON u.id = p.user_id ORDER BY p.created_at DESC LIMIT 200`
+  );
+  res.json({ purchases: rows });
+}));
+
+// Purchase plans management
+router.get("/purchase_plans", asyncHandler(async (req, res) => {
+  const { rows } = await query("SELECT * FROM purchase_plans ORDER BY stars");
+  res.json({ plans: rows });
+}));
+
+router.post("/purchase_plans", asyncHandler(async (req, res) => {
+  const { label, stars, amount_cents, currency = 'USD' } = req.body;
+  if (!label || !Number.isInteger(Number(stars)) || !Number.isInteger(Number(amount_cents))) return res.status(400).json({ error: 'missing_fields' });
+  const { rows } = await query(
+    `INSERT INTO purchase_plans (label, stars, amount_cents, currency) VALUES ($1,$2,$3,$4) RETURNING *`,
+    [label, Number(stars), Number(amount_cents), currency]
+  );
+  res.json({ ok: true, plan: rows[0] });
+}));
+
+router.post("/purchase_plans/:id/toggle", asyncHandler(async (req, res) => {
+  const { rows } = await query("UPDATE purchase_plans SET active = NOT active WHERE id = $1 RETURNING *", [req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'not_found' });
+  res.json({ ok: true, plan: rows[0] });
+}));
+
 // POST /api/admin/tasks { title, type, target_url, reward_spins }
 router.post("/tasks", asyncHandler(async (req, res) => {
   const { title, type, target_url, reward_spins = 1 } = req.body;

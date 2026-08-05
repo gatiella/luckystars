@@ -47,4 +47,5 @@ export const api = {
   withdrawHistory: () => request("/withdraw/history"),
   // Stars top-up (dev instant top-up if ALLOW_DEV_TOPUP is set on the server)
   starsTopUp: (amount) => request("/stars/topup", { method: "POST", body: JSON.stringify({ amount_stars: amount }) }),
+  starsCreateInvoice: (amount) => request("/stars/invoice", { method: "POST", body: JSON.stringify({ amount_stars: amount }) }),
 };

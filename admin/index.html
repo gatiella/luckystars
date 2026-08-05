@@ -42,6 +42,8 @@
   <div class="tabs">
     <button data-tab="withdrawals" class="active">Withdrawals</button>
     <button data-tab="flagged">Flagged Referrals</button>
+    <button data-tab="purchases">Purchases</button>
+    <button data-tab="pricing">Pricing</button>
     <button data-tab="tasks">Tasks</button>
   </div>
   <div id="content"></div>
@@ -133,6 +135,47 @@ async function loadTasks() {
       </tr>`).join("")}
     </tbody></table>`;
 }
+
+async function loadPurchases() {
+  const { purchases } = await req('/purchases');
+  const content = document.getElementById('content');
+  if (!purchases.length) { content.innerHTML = '<div class="empty">No purchases yet.</div>'; return; }
+  content.innerHTML = `<table><thead><tr><th>User</th><th>Stars</th><th>Amount</th><th>Status</th><th>When</th></tr></thead><tbody>${purchases.map(p=>`
+    <tr>
+      <td>${p.username || p.tg_id}</td>
+      <td>${p.stars}</td>
+      <td>$${(p.amount_cents/100).toFixed(2)} ${p.currency}</td>
+      <td>${p.status}</td>
+      <td>${new Date(p.created_at).toLocaleString()}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+async function loadPricing() {
+  const { plans } = await req('/purchase_plans');
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <form onsubmit="return addPlan(event)">
+      <input type="text" id="p-label" placeholder="Label (e.g. 50 Stars)" required>
+      <input type="text" id="p-stars" placeholder="Stars (integer)" required>
+      <input type="text" id="p-cents" placeholder="Amount (cents)" required>
+      <button class="action approve" type="submit">Add Plan</button>
+    </form>
+    <table><thead><tr><th>Label</th><th>Stars</th><th>Price</th><th>Active</th><th></th></tr></thead><tbody>
+      ${plans.map(pl=>`<tr><td>${pl.label}</td><td>${pl.stars}</td><td>$${(pl.amount_cents/100).toFixed(2)}</td><td>${pl.active}</td><td><button class="action" onclick="togglePlan(${pl.id})">Toggle</button></td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+async function addPlan(e) {
+  e.preventDefault();
+  const label = document.getElementById('p-label').value;
+  const stars = Number(document.getElementById('p-stars').value);
+  const amount_cents = Number(document.getElementById('p-cents').value);
+  await req('/purchase_plans', { method: 'POST', body: JSON.stringify({ label, stars, amount_cents }) });
+  loadPricing();
+  return false;
+}
+
+async function togglePlan(id) { await req(`/purchase_plans/${id}/toggle`, { method: 'POST' }); loadPricing(); }
 async function addTask(e) {
   e.preventDefault();
   const title = document.getElementById("t-title").value;

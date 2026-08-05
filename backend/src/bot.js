@@ -29,6 +29,50 @@ bot.command("invite", async (ctx) => {
   );
 });
 
+// Payments: answer pre-checkout queries and handle successful payments
+bot.on("pre_checkout_query", async (ctx) => {
+  try {
+    await ctx.answerPreCheckoutQuery(true);
+  } catch (err) {
+    console.error("pre_checkout_query handling failed:", err.message);
+  }
+});
+
+bot.on("message", async (ctx) => {
+  try {
+    const msg = ctx.message;
+    if (msg.successful_payment) {
+      const payload = msg.successful_payment.invoice_payload; // our provider_payload
+      // payload format: purchase:<uuid>
+      if (payload && payload.startsWith("purchase:")) {
+        const providerPayload = payload;
+        // mark purchase as paid and credit stars
+        const { rows } = await query("SELECT * FROM purchases WHERE provider_payload = $1", [providerPayload]);
+        const purchase = rows[0];
+        if (!purchase) {
+          console.error("Paid purchase not found for payload:", providerPayload);
+          return;
+        }
+
+        if (purchase.status === "paid") return; // already processed
+
+        await query("BEGIN");
+        try {
+          await query("UPDATE purchases SET status = 'paid', paid_at = now(), telegram_chat_id = $1, telegram_message_id = $2 WHERE id = $3", [msg.chat.id, msg.message_id, purchase.id]);
+          await query("UPDATE users SET stars_balance = stars_balance + $1 WHERE id = $2", [purchase.stars, purchase.user_id]);
+          await query("COMMIT");
+          await ctx.reply(`Thanks! Your purchase of ${purchase.stars} ⭐ has been applied.`);
+        } catch (err) {
+          await query("ROLLBACK");
+          console.error("processing successful_payment failed:", err.message);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("payment message handler error:", err.message);
+  }
+});
+
 export function launchBot(app) {
   const mode = process.env.BOT_MODE === "webhook" ? "webhook" : "polling";
 

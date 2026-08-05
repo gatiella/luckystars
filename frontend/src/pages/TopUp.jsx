@@ -15,13 +15,14 @@ export default function TopUp({ user, onChange }) {
     setLoading(true);
     setMessage(null);
     try {
-      const res = await api.starsTopUp(stars);
-      if (res.payment_url) {
-        // If a payment URL is returned, open it (external provider)
-        window.open(res.payment_url, "_blank");
-        setMessage("Opened payment provider — complete purchase and return to the app.");
-      } else if (res.ok) {
-        setMessage(`Top-up complete. New balance: ${res.stars_balance}`);
+      // Prefer production Telegram Payments invoice when available
+      const res = await api.starsCreateInvoice(stars).catch(() => null);
+      if (res && res.ok) {
+        setMessage("Invoice sent — please complete the payment in your Telegram chat. We'll credit stars after payment.");
+      } else {
+        // Fallback to dev top-up if allowed by server
+        const dev = await api.starsTopUp(stars).catch((e) => { throw e; });
+        setMessage(`Top-up complete. New balance: ${dev.stars_balance}`);
         if (onChange) await onChange();
       }
     } catch (err) {
