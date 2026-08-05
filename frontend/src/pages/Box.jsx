@@ -56,7 +56,7 @@ export default function Box({ user, onChange }) {
             ? "Not enough balance for that box."
             : result.prize.type === "nothing"
             ? "Empty box — better luck next time!"
-            : `🎉 You won: ${result.prize.type === "usdt" ? `$${result.prize.value} USDT` : `${result.prize.value} points`}`}
+            : `🎉 You won: ${result.prize.type === "usdt" ? `$${result.prize.value} USDT` : result.prize.type === "stars" ? `+${result.prize.value} ⭐` : `${result.prize.value} points`}`}
         </p>
       )}
       <p className="muted" style={{ marginTop: 14 }}>

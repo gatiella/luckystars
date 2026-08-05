@@ -104,13 +104,13 @@ export default function Wheel({ user, onChange }) {
     api.tasks().then((r) => setTasks(r.tasks)).catch(() => {});
   }, []);
 
-  async function doSpin(tier) {
+  async function doSpin(tier, cost) {
     if (spinning) return;
     setSpinning(true);
     setResult(null);
     try {
       // Step 1: server generates + stores the seed, we only get the hash (commit)
-      const prepared = await api.spinPrepare(tier);
+      const prepared = await api.spinPrepare(tier, cost);
 
       // spin animation while we wait
       const extraTurns = 4 + Math.floor(Math.random() * 3);
@@ -183,6 +183,21 @@ export default function Wheel({ user, onChange }) {
           ⭐ Premium Spin (50 Stars — better odds)
         </button>
 
+        <div style={{ marginTop: 10 }}>
+          <div style={{ marginBottom: 8, fontWeight: 700 }}>Pay-with-Stars Spins</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {[5, 10, 20].map((amt) => (
+              <button
+                key={amt}
+                className={"btn" + (spinning || (user?.stars_balance ?? 0) < amt ? " disabled" : "")}
+                onClick={() => doSpin("stars", amt)}
+              >
+                ⭐ {amt} Spin
+              </button>
+            ))}
+          </div>
+        </div>
+
         {result && !result.error && (
           <div style={{ 
             textAlign: "center", 
@@ -194,7 +209,9 @@ export default function Wheel({ user, onChange }) {
             animation: "pulse 2s ease-in-out"
           }}>
             <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>
-              {result.prize.type === "nothing" ? "❌ No luck this time" : `🎉 ${result.prize.type === "usdt" ? `$${result.prize.value} USDT` : result.prize.type === "free_spin" ? `+${result.prize.value} Free Spin` : `+${result.prize.value} Points`}`}
+              {result.prize.type === "nothing"
+                ? "❌ No luck this time"
+                : `🎉 ${result.prize.type === "usdt" ? `$${result.prize.value} USDT` : result.prize.type === "free_spin" ? `+${result.prize.value} Free Spin` : result.prize.type === "stars" ? `+${result.prize.value} ⭐` : `+${result.prize.value} Points`}`}
             </p>
             <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>
               Hash: {result.result_hash.slice(0, 8)}… | Seed: {result.server_seed.slice(0, 8)}…

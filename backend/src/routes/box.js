@@ -18,6 +18,7 @@ const STANDARD_BOX_TABLE = [
   { key: "usdt_0.1", weight: 5, type: "usdt", value: 0.1 },
   { key: "points_150", weight: 40, type: "points", value: 150 },
   { key: "points_50", weight: 45, type: "points", value: 50 },
+  { key: "stars_2", weight: 8, type: "stars", value: 2 },
   { key: "nothing", weight: 10, type: "nothing", value: 0 },
 ];
 
@@ -25,6 +26,7 @@ const PREMIUM_BOX_TABLE = [
   { key: "usdt_1", weight: 8, type: "usdt", value: 1 },
   { key: "usdt_0.3", weight: 22, type: "usdt", value: 0.3 },
   { key: "points_300", weight: 40, type: "points", value: 300 },
+  { key: "stars_10", weight: 10, type: "stars", value: 10 },
   { key: "nothing", weight: 30, type: "nothing", value: 0 },
 ];
 
@@ -97,6 +99,8 @@ router.post("/open", asyncHandler(async (req, res) => {
       await query("UPDATE users SET usdt_balance = usdt_balance + $1 WHERE id = $2", [prize.value, user.id]);
     } else if (prize.type === "points") {
       await query("UPDATE users SET points_balance = points_balance + $1 WHERE id = $2", [prize.value, user.id]);
+    } else if (prize.type === "stars") {
+      await query("UPDATE users SET stars_balance = stars_balance + $1 WHERE id = $2", [prize.value, user.id]);
     }
 
     await query(

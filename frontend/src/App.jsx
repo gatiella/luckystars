@@ -7,6 +7,7 @@ import Box from "./pages/Box.jsx";
 import Referral from "./pages/Referral.jsx";
 import Withdraw from "./pages/Withdraw.jsx";
 import Leaderboard from "./pages/Leaderboard.jsx";
+import TopUp from "./pages/TopUp.jsx";
 import { api } from "./api.js";
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/box" element={<Box user={user} onChange={refresh} />} />
         <Route path="/referral" element={<Referral user={user} />} />
         <Route path="/withdraw" element={<Withdraw user={user} onChange={refresh} />} />
+        <Route path="/topup" element={<TopUp user={user} onChange={refresh} />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
       </Routes>
       <Nav />

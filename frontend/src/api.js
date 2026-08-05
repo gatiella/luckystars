@@ -31,7 +31,7 @@ async function request(path, options = {}) {
 
 export const api = {
   me: () => request("/me"),
-  spinPrepare: (tier = "standard") => request(`/spin/prepare?tier=${tier}`),
+  spinPrepare: (tier = "standard", cost) => request(`/spin/prepare?tier=${tier}${cost ? `&cost=${cost}` : ""}`),
   spin: (nonce) => request("/spin", { method: "POST", body: JSON.stringify({ nonce }) }),
   boxPrepare: (tier = "standard") => request(`/box/prepare?tier=${tier}`),
   boxOpen: (nonce) => request("/box/open", { method: "POST", body: JSON.stringify({ nonce }) }),
@@ -45,4 +45,6 @@ export const api = {
   leaderboard: () => request("/referral/leaderboard"),
   withdraw: (body) => request("/withdraw", { method: "POST", body: JSON.stringify(body) }),
   withdrawHistory: () => request("/withdraw/history"),
+  // Stars top-up (dev instant top-up if ALLOW_DEV_TOPUP is set on the server)
+  starsTopUp: (amount) => request("/stars/topup", { method: "POST", body: JSON.stringify({ amount_stars: amount }) }),
 };
