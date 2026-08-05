@@ -41,7 +41,7 @@ export default function TopUp({ user, onChange }) {
         <div className="list-row" key={p.stars} style={{ alignItems: "center" }}>
           <div>
             <div style={{ fontWeight: 700 }}>{p.label}</div>
-            <div className="muted">Instant top-up (dev mode)</div>
+            <div className="muted">Instant top-up (dev/testing mode enabled on server)</div>
           </div>
           <button className="btn" onClick={() => buy(p.stars)} disabled={loading}>
             {loading ? "Processing…" : `Buy ${p.label}`}
