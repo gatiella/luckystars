@@ -17,6 +17,7 @@ import earnRoutes from "./routes/earn.js";
 import withdrawRoutes from "./routes/withdraw.js";
 import adminRoutes from "./routes/admin.js";
 import starsRoutes from "./routes/stars.js";
+import statsRoutes from "./routes/stats.js";
 import { launchBot } from "./bot.js";
 import { query } from "./db.js";
 
@@ -76,6 +77,7 @@ app.use("/api/box", telegramAuth, gameLimiter, boxRoutes);
 app.use("/api/referral", telegramAuth, referralRoutes);
 app.use("/api/earn", telegramAuth, earnRoutes);
 app.use("/api/stars", telegramAuth, starsRoutes);
+app.use("/api/stats", telegramAuth, statsRoutes);
 app.use("/api/withdraw", telegramAuth, withdrawLimiter, withdrawRoutes);
 app.use("/api/admin", adminAuth, adminRoutes);
 

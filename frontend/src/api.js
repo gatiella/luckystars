@@ -43,6 +43,7 @@ export const api = {
     request("/referral/claim", { method: "POST", body: JSON.stringify({ referrer_tg_id }) }),
   referralTree: () => request("/referral/tree"),
   leaderboard: () => request("/referral/leaderboard"),
+  statsOverview: () => request("/stats/overview"),
   withdraw: (body) => request("/withdraw", { method: "POST", body: JSON.stringify(body) }),
   withdrawHistory: () => request("/withdraw/history"),
   // Stars top-up (dev instant top-up if ALLOW_DEV_TOPUP is set on the server)

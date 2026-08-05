@@ -173,15 +173,37 @@ body {
 .tab.active { color: var(--gold-400); }
 .tab .icon { font-size: 20px; }
 
-.box-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.box-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
 .box {
-  aspect-ratio: 1; border-radius: var(--radius-md);
-  background: linear-gradient(160deg, var(--purple-700), var(--purple-900));
-  border: 1px solid rgba(255,216,115,0.2);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  --accent: var(--gold-400);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 65%),
+    linear-gradient(160deg, var(--purple-700), var(--purple-900));
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; padding: 16px 10px 12px;
   font-weight: 700;
 }
-.box .emoji { font-size: 34px; }
+.box-emoji {
+  font-size: 40px; line-height: 1;
+  filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+.box.opening .box-emoji { animation: boxShake 0.4s ease-in-out infinite; }
+.box-name { font-size: 15px; margin-top: 4px; }
+.box-hint { font-size: 10.5px; font-weight: 600; color: var(--text-lo); text-align: center; }
+.box-open-btn {
+  margin-top: 8px; padding: 9px 12px; font-size: 12.5px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 85%, #fff), var(--accent));
+  color: #1a0b33;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+@keyframes boxShake {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-8deg) scale(1.08); }
+  75% { transform: rotate(8deg) scale(1.08); }
+}
 
 .list-row {
   display: flex; justify-content: space-between; align-items: center;
@@ -192,6 +214,103 @@ body {
   background: rgba(53,224,161,0.15); color: var(--success);
 }
 .badge.pending { background: rgba(245,193,75,0.15); color: var(--gold-400); }
+
+/* ---- Ranks tab ---- */
+.contest-banner {
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255,216,115,0.18), transparent 55%),
+    linear-gradient(160deg, var(--purple-700), var(--purple-900));
+  border-color: rgba(255,216,115,0.35);
+}
+.contest-flare {
+  position: absolute; top: -6px; right: 6px; font-size: 64px; opacity: 0.16;
+  transform: rotate(12deg); pointer-events: none;
+}
+.countdown { display: flex; gap: 8px; }
+.countdown-cell {
+  flex: 1; text-align: center; padding: 8px 0;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,216,115,0.25);
+  border-radius: var(--radius-md);
+}
+.countdown-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700; font-size: 20px; color: var(--gold-400);
+  font-variant-numeric: tabular-nums;
+}
+.countdown-label { font-size: 10px; font-weight: 600; color: var(--text-lo); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.stats-strip { display: flex; gap: 10px; margin: 0 20px; }
+.stat-tile {
+  flex: 1; text-align: center; padding: 12px 6px;
+  background: linear-gradient(160deg, var(--purple-800), var(--purple-900));
+  border: 1px solid rgba(255,216,115,0.15);
+  border-radius: var(--radius-md);
+}
+.stat-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700; font-size: 18px; color: var(--gold-400);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stat-label { font-size: 10px; font-weight: 600; color: var(--text-lo); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+.podium { display: flex; align-items: flex-end; gap: 10px; padding: 8px 0 4px; }
+.podium-slot {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  min-width: 0;
+}
+.podium-medal { font-size: 22px; }
+.place-1 .podium-medal { font-size: 28px; animation: bob 2.2s ease-in-out infinite; }
+.podium-name {
+  font-weight: 700; font-size: 12.5px; max-width: 100%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.podium-count { font-size: 11px; color: var(--gold-400); font-weight: 700; }
+.podium-bar { width: 100%; border-radius: 8px 8px 0 0; margin-top: 6px; }
+.bar-1 { height: 56px; background: linear-gradient(180deg, var(--gold-400), rgba(217,161,46,0.25)); }
+.bar-2 { height: 38px; background: linear-gradient(180deg, #c7d3e8, rgba(199,211,232,0.15)); }
+.bar-3 { height: 26px; background: linear-gradient(180deg, #d8925a, rgba(216,146,90,0.15)); }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+.podium-empty { text-align: center; padding: 10px 0 4px; }
+.rank-avatar {
+  border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: #fff;
+  border: 2px solid rgba(255,255,255,0.25);
+}
+.rank-num { font-weight: 700; color: var(--text-lo); min-width: 28px; display: inline-block; }
+.my-rank {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 12px; padding: 10px 12px;
+  background: rgba(255,216,115,0.08);
+  border: 1px solid rgba(255,216,115,0.35);
+  border-radius: var(--radius-md);
+  font-weight: 700;
+}
+
+.live-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--danger); margin-right: 6px; vertical-align: middle;
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,92,114,0.5); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(255,92,114,0); }
+}
+.win-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 13px;
+  animation: winSlide 0.4s ease-out both;
+}
+.win-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.win-prize { font-weight: 700; color: var(--success); white-space: nowrap; }
+@keyframes winSlide {
+  0% { transform: translateX(-10px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
 
 input[type="text"], input[type="number"] {
   width: 100%; padding: 14px 16px; border-radius: var(--radius-md);

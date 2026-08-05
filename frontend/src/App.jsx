@@ -51,7 +51,7 @@ export default function App() {
         <Route path="/referral" element={<Referral user={user} />} />
         <Route path="/withdraw" element={<Withdraw user={user} onChange={refresh} />} />
         <Route path="/topup" element={<TopUp user={user} onChange={refresh} />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/leaderboard" element={<Leaderboard user={user} />} />
       </Routes>
       <Nav />
     </>

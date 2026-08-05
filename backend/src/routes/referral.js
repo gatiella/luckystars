@@ -75,8 +75,20 @@ router.get("/tree", asyncHandler(async (req, res) => {
   res.json({ referrals: rows });
 }));
 
+// The weekly leaderboard is a materialized view — refresh it at most once a
+// minute so the Ranks tab reflects new invites without hammering the DB.
+let lastLeaderboardRefresh = 0;
+async function refreshLeaderboardView() {
+  if (Date.now() - lastLeaderboardRefresh < 60_000) return;
+  lastLeaderboardRefresh = Date.now();
+  await query("REFRESH MATERIALIZED VIEW weekly_referral_leaderboard").catch(() => {
+    lastLeaderboardRefresh = 0; // allow retry on next request
+  });
+}
+
 // GET /api/referral/leaderboard
 router.get("/leaderboard", asyncHandler(async (req, res) => {
+  await refreshLeaderboardView();
   const { rows } = await query(
     `SELECT u.username, u.first_name, l.invite_count
      FROM weekly_referral_leaderboard l
@@ -84,7 +96,19 @@ router.get("/leaderboard", asyncHandler(async (req, res) => {
      ORDER BY l.invite_count DESC
      LIMIT 20`
   );
-  res.json({ leaderboard: rows });
+
+  const { rows: meRows } = await query(
+    `SELECT invite_count, rank FROM (
+       SELECT user_id, invite_count, RANK() OVER (ORDER BY invite_count DESC) AS rank
+       FROM weekly_referral_leaderboard
+     ) ranked WHERE user_id = $1`,
+    [req.user.id]
+  );
+
+  res.json({
+    leaderboard: rows,
+    me: meRows[0] ? { rank: Number(meRows[0].rank), invite_count: Number(meRows[0].invite_count) } : null,
+  });
 }));
 
 export default router;

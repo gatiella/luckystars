@@ -3,7 +3,7 @@ import { api } from "../api.js";
 
 export default function Referral({ user }) {
   const [tree, setTree] = useState([]);
-  const [botUsername, setBotUsername] = useState("your_bot");
+  const [botUsername] = useState(import.meta.env.VITE_BOT_USERNAME || "your_bot");
 
   useEffect(() => {
     api.referralTree().then((r) => setTree(r.referrals)).catch(() => {});

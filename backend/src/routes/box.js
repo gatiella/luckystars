@@ -11,29 +11,60 @@ import {
 
 const router = Router();
 
-const STANDARD_BOX_COST = 100; // points
-const PREMIUM_BOX_COST = 150; // stars
-
-const STANDARD_BOX_TABLE = [
-  { key: "usdt_0.1", weight: 5, type: "usdt", value: 0.1 },
-  { key: "points_150", weight: 40, type: "points", value: 150 },
-  { key: "points_50", weight: 45, type: "points", value: 50 },
-  { key: "stars_2", weight: 8, type: "stars", value: 2 },
-  { key: "nothing", weight: 10, type: "nothing", value: 0 },
-];
-
-const PREMIUM_BOX_TABLE = [
-  { key: "usdt_1", weight: 8, type: "usdt", value: 1 },
-  { key: "usdt_0.3", weight: 22, type: "usdt", value: 0.3 },
-  { key: "points_300", weight: 40, type: "points", value: 300 },
-  { key: "stars_10", weight: 10, type: "stars", value: 10 },
-  { key: "nothing", weight: 30, type: "nothing", value: 0 },
-];
+// Box catalog — the Boxes tab in frontend/src/pages/Box.jsx mirrors tiers/costs, keep in sync.
+const BOXES = {
+  mini: {
+    cost: 50,
+    costType: "points",
+    table: [
+      { key: "usdt_0.05", weight: 5, type: "usdt", value: 0.05 },
+      { key: "points_75", weight: 35, type: "points", value: 75 },
+      { key: "points_30", weight: 40, type: "points", value: 30 },
+      { key: "stars_1", weight: 10, type: "stars", value: 1 },
+      { key: "nothing", weight: 10, type: "nothing", value: 0 },
+    ],
+  },
+  standard: {
+    cost: 100,
+    costType: "points",
+    table: [
+      { key: "usdt_0.1", weight: 5, type: "usdt", value: 0.1 },
+      { key: "points_150", weight: 40, type: "points", value: 150 },
+      { key: "points_50", weight: 45, type: "points", value: 50 },
+      { key: "stars_2", weight: 8, type: "stars", value: 2 },
+      { key: "nothing", weight: 10, type: "nothing", value: 0 },
+    ],
+  },
+  premium: {
+    cost: 150,
+    costType: "stars",
+    table: [
+      { key: "usdt_1", weight: 8, type: "usdt", value: 1 },
+      { key: "usdt_0.3", weight: 22, type: "usdt", value: 0.3 },
+      { key: "points_300", weight: 40, type: "points", value: 300 },
+      { key: "stars_10", weight: 10, type: "stars", value: 10 },
+      { key: "nothing", weight: 30, type: "nothing", value: 0 },
+    ],
+  },
+  royal: {
+    cost: 400,
+    costType: "stars",
+    table: [
+      { key: "usdt_3", weight: 6, type: "usdt", value: 3 },
+      { key: "usdt_1", weight: 18, type: "usdt", value: 1 },
+      { key: "usdt_0.5", weight: 16, type: "usdt", value: 0.5 },
+      { key: "points_1000", weight: 25, type: "points", value: 1000 },
+      { key: "stars_25", weight: 12, type: "stars", value: 25 },
+      { key: "nothing", weight: 23, type: "nothing", value: 0 },
+    ],
+  },
+};
 
 // GET /api/box/prepare?tier=standard — same server-held-seed pattern as spins
 router.get("/prepare", asyncHandler(async (req, res) => {
   const user = req.user;
-  const tier = req.query.tier === "premium" ? "premium" : "standard";
+  const tier = BOXES[req.query.tier] ? req.query.tier : "standard";
+  const box = BOXES[tier];
 
   const serverSeed = generateServerSeed();
   const clientSeed = generateClientSeed();
@@ -50,8 +81,8 @@ router.get("/prepare", asyncHandler(async (req, res) => {
     client_seed: clientSeed,
     nonce,
     tier,
-    cost: tier === "premium" ? PREMIUM_BOX_COST : STANDARD_BOX_COST,
-    cost_type: tier === "premium" ? "stars" : "points",
+    cost: box.cost,
+    cost_type: box.costType,
   });
 }));
 
@@ -76,8 +107,9 @@ router.post("/open", asyncHandler(async (req, res) => {
     }
 
     const tier = pending.tier;
-    const cost = tier === "premium" ? PREMIUM_BOX_COST : STANDARD_BOX_COST;
-    const costType = tier === "premium" ? "stars" : "points";
+    const box = BOXES[tier] ?? BOXES.standard;
+    const cost = box.cost;
+    const costType = box.costType;
     const balanceCol = costType === "stars" ? "stars_balance" : "points_balance";
 
     const { rows: userRows } = await query("SELECT * FROM users WHERE id = $1 FOR UPDATE", [user.id]);
@@ -89,8 +121,7 @@ router.post("/open", asyncHandler(async (req, res) => {
 
     await query("UPDATE pending_rounds SET used = TRUE WHERE id = $1", [pending.id]);
 
-    const table = tier === "premium" ? PREMIUM_BOX_TABLE : STANDARD_BOX_TABLE;
-    const prize = resolvePrize(pending.server_seed, pending.client_seed, Number(pending.nonce), table);
+    const prize = resolvePrize(pending.server_seed, pending.client_seed, Number(pending.nonce), box.table);
     const hash = resultHash(pending.server_seed, pending.client_seed, Number(pending.nonce));
 
     await query(`UPDATE users SET ${balanceCol} = ${balanceCol} - $1 WHERE id = $2`, [cost, user.id]);
