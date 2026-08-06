@@ -29,6 +29,33 @@ bot.command("invite", async (ctx) => {
   );
 });
 
+// Admin panel access: restricted to the tg_id(s) in ADMIN_TG_ID (comma-separated
+// for multiple admins). The panel itself re-verifies the opener's Telegram identity
+// via Mini App initData on every API call — see adminAuth.js — so this check is
+// about who gets the entry point, not the only line of defense.
+const ADMIN_TG_IDS = (process.env.ADMIN_TG_ID || "")
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
+const ADMIN_PANEL_URL =
+  process.env.ADMIN_PANEL_URL || (process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/admin` : null);
+
+bot.command("admin", async (ctx) => {
+  if (ctx.chat.type !== "private") return; // never respond in groups
+  if (!ADMIN_TG_IDS.includes(String(ctx.from.id))) return; // silently ignore non-admins
+
+  if (!ADMIN_PANEL_URL) {
+    await ctx.reply("Set ADMIN_PANEL_URL or BACKEND_URL in env so I can build the admin panel link.");
+    return;
+  }
+
+  await ctx.reply("🛠 LuckyStars Admin", {
+    reply_markup: {
+      inline_keyboard: [[{ text: "Open Admin Panel", web_app: { url: ADMIN_PANEL_URL } }]],
+    },
+  });
+});
+
 // Payments: answer pre-checkout queries and handle successful payments
 bot.on("pre_checkout_query", async (ctx) => {
   try {
