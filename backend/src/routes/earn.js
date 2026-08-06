@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { query } from "../db.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
+import { verifyTaskCompletion } from "../lib/taskVerification.js";
 
 const router = Router();
 
@@ -74,13 +75,37 @@ router.post("/tasks/:id/complete", asyncHandler(async (req, res) => {
   const task = taskRows[0];
   if (!task) return res.status(404).json({ error: "task_not_found" });
 
-  try {
-    await query("INSERT INTO task_completions (user_id, task_id) VALUES ($1, $2)", [user.id, taskId]);
-  } catch {
-    return res.status(400).json({ error: "already_completed" });
+  // Reject early if already completed, before doing verification work.
+  const { rows: doneRows } = await query(
+    "SELECT 1 FROM task_completions WHERE user_id = $1 AND task_id = $2",
+    [user.id, taskId]
+  );
+  if (doneRows.length > 0) return res.status(400).json({ error: "already_completed" });
+
+  // Verify the user actually completed the task (e.g. joined the channel)
+  // before crediting any reward.
+  const verification = await verifyTaskCompletion(task, user.tg_id);
+  if (!verification.verified) {
+    return res.status(403).json({
+      error: "not_verified",
+      reason: verification.reason,
+      message: verification.message || "Task not completed yet.",
+    });
   }
 
-  await query("UPDATE users SET free_spins = free_spins + $1 WHERE id = $2", [task.reward_spins, user.id]);
+  // Record completion and credit reward atomically. The UNIQUE(user_id, task_id)
+  // constraint is the source of truth against double-claims under concurrency.
+  await query("BEGIN");
+  try {
+    await query("INSERT INTO task_completions (user_id, task_id) VALUES ($1, $2)", [user.id, taskId]);
+    await query("UPDATE users SET free_spins = free_spins + $1 WHERE id = $2", [task.reward_spins, user.id]);
+    await query("COMMIT");
+  } catch (err) {
+    await query("ROLLBACK");
+    if (err.code === "23505") return res.status(400).json({ error: "already_completed" }); // unique violation
+    throw err;
+  }
+
   res.json({ ok: true, free_spins_granted: task.reward_spins });
 }));
 

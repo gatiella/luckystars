@@ -26,7 +26,8 @@ const app = express();
 app.set("trust proxy", 1); // needed for correct req.ip behind Render/Railway proxies
 
 // contentSecurityPolicy disabled because the plain-HTML admin panel below uses inline
-// script/style; the panel itself is protected by ADMIN_SECRET on every API call it makes.
+// script/style; the panel itself is opened only via the bot's /admin command (gated on
+// ADMIN_TG_ID) and every API call it makes is re-verified against that same ID — see adminAuth.
 // For a client this sensitive, also put /admin behind an IP allowlist or VPN at the proxy layer.
 // frameguard is disabled to allow Telegram Mini App iframe embedding.
 app.use(helmet({ contentSecurityPolicy: false, frameguard: false }));
@@ -62,7 +63,7 @@ const withdrawLimiter = rateLimit({ windowMs: 60 * 1000, limit: 5 });
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 
-// Admin panel (static HTML). API calls it makes are gated by ADMIN_SECRET — see adminAuth.
+// Admin panel (static HTML). API calls it makes are gated by Telegram identity — see adminAuth.
 app.use("/admin", express.static(path.join(__dirname, "../../admin")));
 
 // Serve the built frontend at the root URL for single-service Render deployments.

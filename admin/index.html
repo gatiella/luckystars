@@ -35,7 +35,7 @@
 <body>
 <header>
   <h1>✨ LuckyStars — Admin</h1>
-  <button onclick="changeSecret()" style="background:none;border:1px solid rgba(255,216,115,0.3);color:#fdf6ff;padding:6px 12px;border-radius:8px;cursor:pointer;">🔑 Set Admin Key</button>
+  <button onclick="loadAll()" style="background:none;border:1px solid rgba(255,216,115,0.3);color:#fdf6ff;padding:6px 12px;border-radius:8px;cursor:pointer;">🔄 Reload</button>
 </header>
 <main>
   <div class="stat-grid" id="stats"></div>
@@ -49,21 +49,29 @@
   <div id="content"></div>
 </main>
 
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 const API_BASE = "/api/admin";
 
-function getSecret() { return localStorage.getItem("ls_admin_secret") || ""; }
-function changeSecret() {
-  const s = prompt("Enter ADMIN_SECRET (from backend/.env):", getSecret());
-  if (s !== null) { localStorage.setItem("ls_admin_secret", s); loadAll(); }
-}
+// Access control lives entirely in Telegram identity now: this page only works
+// when opened via the bot's /admin command (which checks ADMIN_TG_ID before
+// sending the button), and every API call re-proves who's asking by sending
+// the Mini App's signed initData — verified server-side against BOT_TOKEN and
+// ADMIN_TG_ID in adminAuth.js. There's no local secret to set or leak anymore.
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+const initData = (tg && tg.initData) || "";
 
 async function req(path, options = {}) {
   const res = await fetch(API_BASE + path, {
     ...options,
-    headers: { "Content-Type": "application/json", "X-Admin-Secret": getSecret(), ...(options.headers||{}) },
+    headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": initData, ...(options.headers||{}) },
   });
-  if (res.status === 401) { alert("Unauthorized — check your admin key."); throw new Error("unauthorized"); }
+  if (res.status === 401 || res.status === 403) {
+    document.getElementById("content").innerHTML =
+      '<div class="empty">🚫 Not authorized. Open this panel via the bot\'s /admin command using an admin Telegram account.</div>';
+    throw new Error("unauthorized");
+  }
   return res.json();
 }
 
@@ -197,7 +205,13 @@ document.querySelectorAll(".tabs button").forEach(btn => {
 });
 
 function loadAll() { loadStats().catch(()=>{}); loadWithdrawals().catch(()=>{}); }
-if (!getSecret()) changeSecret(); else loadAll();
+
+if (!initData) {
+  document.getElementById("content").innerHTML =
+    '<div class="empty">Open this page from the bot\'s /admin command inside Telegram — it won\'t work in a regular browser tab.</div>';
+} else {
+  loadAll();
+}
 </script>
 </body>
 </html>
